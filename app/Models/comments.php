@@ -9,4 +9,9 @@ class comments extends Model
 {
     use HasFactory;
     protected $guarded = [];
+    protected $fillable = [
+        'comment',
+        'tasks_id',
+        'users_id',
+    ];
 }
