@@ -36,6 +36,7 @@ class TasksController extends Controller
             'description'=> $request->description,
             'status'=> $request->status,
             'users_id' => $request->users_id,
+            // 'users_id' => auth()->user()->id,
             // 'users_id'=> User::with('tasks')
             //                     ->where('id', $request->users_id)
             //                     ->get(),

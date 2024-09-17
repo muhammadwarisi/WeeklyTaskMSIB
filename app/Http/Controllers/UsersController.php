@@ -11,6 +11,50 @@ use Illuminate\Validation\Rules\Password;
 
 class UsersController extends Controller
 {
+    public function loginUser(Request $request)
+    {
+        $request->validate([
+            "email"=> ["required"],
+            "password"=> ["required"],
+        ]);
+        $data = [
+            "email"=> $request->email,
+            "password"=> $request->password,
+        ];
+
+        if(!$token = auth()->guard('api')->attempt($data)) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Email atau Password Anda salah'
+            ], 401);
+        }
+
+        //if auth success
+        return response()->json([
+            'success' => true,
+            'user'    => auth()->guard('api')->user(),    
+            'token'   => $token   
+        ], 200);
+        // GENERATE TOKEN LOGIN
+        // $token = RandomString::numeric(6);
+
+        // if ($data) {
+        //     return response()->json([
+        //         'data' => $data,
+        //         'message' => 'Berhasil Login'
+        //     ]);
+        // }
+
+        // if ($data['email'] == $user['email']) {
+        //     if ($user['password'] != $data['password']) {
+        //         return response()->json([
+        //             'status' => 'Success',
+        //             'message' => 'berhasil login'
+        //         ]);
+        //     }
+        // }
+    }
+
     public function getUser(string $id)
     {
         $user = User::where("id", $id)->first();
