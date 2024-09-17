@@ -15,7 +15,7 @@ class TasksController extends Controller
             return response()->json([
                 $tasks,
                 'message' => 'Task Ditemukan'
-            ],200);
+            ], 200);
         } else {
             return response()->json([
                 'message' => 'Tidak Ada Tasks'
@@ -26,15 +26,15 @@ class TasksController extends Controller
     public function createTasks(Request $request)
     {
         $request->validate([
-            'title'=> ['required','string'],
-            'description' => ['required','string', 'max:100'],
-            'status'=> ['required'],
+            'title' => ['required', 'string'],
+            'description' => ['required', 'string', 'max:100'],
+            'status' => ['required'],
         ]);
 
         $tasks = tasks::create([
-            'title'=> $request->title,
-            'description'=> $request->description,
-            'status'=> $request->status,
+            'title' => $request->title,
+            'description' => $request->description,
+            'status' => $request->status,
             'users_id' => $request->users_id,
             // 'users_id' => auth()->user()->id,
             // 'users_id'=> User::with('tasks')
@@ -48,12 +48,12 @@ class TasksController extends Controller
     public function updateTasks(Request $request, string $id)
     {
         $request->validate([
-            'title'=> ['required','string'],
-            'description'=> ['required','string'],
-            'status'=> ['required'],
+            'title' => ['required', 'string'],
+            'description' => ['required', 'string'],
+            'status' => ['required'],
         ]);
         $data = $request->all();
-        $tasks = tasks::where('id',$id)->update($data);
+        $tasks = tasks::where('id', $id)->update($data);
         if ($tasks) {
             return response()->json([
                 'status' => 'success',
@@ -61,18 +61,25 @@ class TasksController extends Controller
             ]);
         } else {
             return response()->json([
-                'message'=> 'Tasks Gagal DiUpdate',
+                'message' => 'Tasks Gagal DiUpdate',
                 'status' => 'failed'
             ]);
         }
     }
-    public function deleteTasks(Request $request, string $id)
+    public function deleteTasks(string $id)
     {
-        $tasks = tasks::where('id',$id)->delete();
+        // Temukan task berdasarkan ID
+        $tasks = tasks::find($id);
         if ($tasks) {
+            // Hapus task
+            $tasks->delete();
             return response()->json([
-                'message' => 'Tasks Berhasil DiDelete'
-            ]);
+                'message' => 'Task Berhasil Dihapus'
+            ], 200);
+        } else {
+            return response()->json([
+                'message' => 'Task tidak ditemukan'
+            ], 404);
         }
     }
 }

@@ -16,7 +16,7 @@ class tasks extends Model
         'status',
         'users_id',
     ];
-    public function tasks(): HasMany
+    public function comments(): HasMany
     {
         return $this->hasMany(comments::class,'tasks_id');
     }

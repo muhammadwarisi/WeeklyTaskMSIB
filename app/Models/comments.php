@@ -14,4 +14,9 @@ class comments extends Model
         'tasks_id',
         'users_id',
     ];
+
+    public function tasks()
+    {
+        return $this->belongsTo(tasks::class, 'tasks_id');
+    }
 }
