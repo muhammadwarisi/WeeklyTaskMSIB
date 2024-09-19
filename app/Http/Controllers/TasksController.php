@@ -42,7 +42,9 @@ class TasksController extends Controller
             //                     ->get(),
         ]);
         return response()->json([
-            $tasks,
+            'status' => 'success',
+            'message'=> 'Berhasil Membuat Data',
+            'data' => $tasks,
         ]);
     }
     public function updateTasks(Request $request, string $id)
@@ -57,13 +59,14 @@ class TasksController extends Controller
         if ($tasks) {
             return response()->json([
                 'status' => 'success',
-                'message' => 'Task Berhasil DiUpdate'
-            ]);
+                'message' => 'Task Berhasil DiUpdate',
+                'data' => $tasks,
+            ], 200);
         } else {
             return response()->json([
                 'message' => 'Tasks Gagal DiUpdate',
                 'status' => 'failed'
-            ]);
+            ],400);
         }
     }
     public function deleteTasks(string $id)

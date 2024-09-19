@@ -30,7 +30,7 @@ class UsersController extends Controller
         ],[
             "username.required"=> "Username Wajib Diisi",
             "username.lowercase"=> ":attribute harus mengandung Huruf Kecil",
-            "email"=> "Email Wajib diisi",
+            "email"=> ":attribute Wajib diisi",
             "password.min"=> ":attribute minimal :min karakter",
             "password.letters"=> ":attribute harus mengandung :letters",
             "password.symbols"=> ":attribute harus mengandung :symbols",

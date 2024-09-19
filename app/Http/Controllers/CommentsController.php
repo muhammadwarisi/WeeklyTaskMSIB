@@ -44,6 +44,7 @@ class CommentsController extends Controller
             return response()->json([
                 'message' => 'berhasil membuat komen',
                 'status'=> 'success',
+                'data' => $comment
             ]);
         }
     }
@@ -56,6 +57,7 @@ class CommentsController extends Controller
         return response()->json([
             'comment' => $task,
             'message' => 'Comment Ditemukan',
+            'status'=> 'success'
         ]);
         } else {
             return response()->json(['message'=> 'tidak ada comment'],404);
