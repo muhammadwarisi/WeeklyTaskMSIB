@@ -30,7 +30,10 @@ class CommentsController extends Controller
         // Cek apakah task ada
         $task = tasks::find($tasks_id);
         if (!$task) {
-            return response()->json(['error' => 'Task not found'], 404);
+            return response()->json([
+                'status' => 'failed',
+                'message' => 'Task tidak ditemukan'
+            ], 404);
         }
 
         // Simpan komentar
@@ -40,27 +43,34 @@ class CommentsController extends Controller
             'users_id' => $request->input('users_id'),
             'comment' => $request->input('comment'),
         ]);
-        if ($comment) {
+        if (!$comment) {
             return response()->json([
-                'message' => 'berhasil membuat komen',
+                'status'=> 'failed',
+                'message' => 'gagal membuat komen',
+            ],400);
+        } else {
+            return response()->json([
                 'status'=> 'success',
-                'data' => $comment
-            ]);
+                'message'=> 'berhasil membuat comment',
+                'data'=> $comment
+            ],200);
         }
     }
     public function getComment(string $tasks_id)
     {
         $task = Comments::where('tasks_id', $tasks_id)
-                                ->find($tasks_id);
-        // $comment = comments::where('comment', $tasks_id)->get();
-        if ($task) {
+                                ->get();
+        if (!$task) {
         return response()->json([
-            'comment' => $task,
-            'message' => 'Comment Ditemukan',
-            'status'=> 'success'
-        ]);
+            'status'=> 'failed',
+            'message' => 'Comment tidak Ditemukan',
+        ],404);
         } else {
-            return response()->json(['message'=> 'tidak ada comment'],404);
+            return response()->json([
+                'status'=> 'success',
+                'message'=> 'comment ditemukan',
+                'data'=> $task
+            ],200);
         }
     }
 }

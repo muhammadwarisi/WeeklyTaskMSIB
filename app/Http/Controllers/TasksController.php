@@ -2,24 +2,30 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Resources\TasksResource;
 use App\Models\tasks;
 use App\Models\User;
 use Illuminate\Http\Request;
+use Symfony\Component\HttpFoundation\Response;
+
+
 
 class TasksController extends Controller
 {
-    public function getTasks(string $id)
+    public function getTasks(string $users_id)
     {
-        $tasks = tasks::find($id);
-        if ($tasks) {
+        $tasks = tasks::where("users_id", '=' ,$users_id)->get();
+        if (!$tasks) {
             return response()->json([
-                $tasks,
-                'message' => 'Task Ditemukan'
-            ], 200);
+                'status'=> 'failed',
+                'message' => 'Tidak Ada Tasks'
+            ],400);
         } else {
             return response()->json([
-                'message' => 'Tidak Ada Tasks'
-            ]);
+                'status'=> 'success',
+                'message' => 'Task Ditemukan',
+                'data'=> $tasks
+            ], 200);
         }
     }
 
@@ -41,26 +47,37 @@ class TasksController extends Controller
             //                     ->where('id', $request->users_id)
             //                     ->get(),
         ]);
-        return response()->json([
-            'status' => 'success',
-            'message'=> 'Berhasil Membuat Data',
-            'data' => $tasks,
-        ]);
+        if ($tasks){
+            return response()->json([
+                'status' => 'success',
+                'message'=> 'Berhasil Membuat Data',
+                'data' => $tasks,
+            ],200);
+        } else {
+            return response()->json([
+                'status'=>'false',
+                'message'=> 'Gagal membuat tasks'
+            ], Response::HTTP_BAD_REQUEST);
+        }
+        
     }
-    public function updateTasks(Request $request, string $id)
+    public function updateTasks(Request $request, string $tasks_id)
     {
         $request->validate([
-            'title' => ['required', 'string'],
-            'description' => ['required', 'string'],
+            'title' => ['required'],
+            'description' => ['required'],
             'status' => ['required'],
         ]);
-        $data = $request->all();
-        $tasks = tasks::where('id', $id)->update($data);
+        $data = [
+            'title'=> $request->input('title'),
+            'description'=> $request->input('description'),
+            'status'=> $request->input('status'),
+        ];
+        $tasks = tasks::where('id', $tasks_id)->update($data);
         if ($tasks) {
             return response()->json([
                 'status' => 'success',
                 'message' => 'Task Berhasil DiUpdate',
-                'data' => $tasks,
             ], 200);
         } else {
             return response()->json([
@@ -69,18 +86,20 @@ class TasksController extends Controller
             ],400);
         }
     }
-    public function deleteTasks(string $id)
+    public function deleteTasks(string $tasks_id)
     {
         // Temukan task berdasarkan ID
-        $tasks = tasks::find($id);
+        $tasks = tasks::find($tasks_id);
         if ($tasks) {
             // Hapus task
             $tasks->delete();
             return response()->json([
+                'status'=> 'success',
                 'message' => 'Task Berhasil Dihapus'
             ], 200);
         } else {
             return response()->json([
+                'status' => 'failed',
                 'message' => 'Task tidak ditemukan'
             ], 404);
         }
