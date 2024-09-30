@@ -12,6 +12,7 @@ use Symfony\Component\HttpFoundation\Response;
 use function Laravel\Prompts\password;
 use Illuminate\Validation\Rules\Password;
 use Illuminate\Support\Facades\Validator;
+use Laravel\Sanctum\PersonalAccessToken;
 
 class UsersController extends Controller
 {
@@ -24,7 +25,7 @@ class UsersController extends Controller
         ],[
             "username.required"=> "Username Wajib Diisi",
             "username.lowercase"=> ":attribute harus mengandung Huruf Kecil",
-            "email"=> ":attribute Wajib diisi",
+            "email"=> ":attribute harus merupakan email yang valid",
             "password.min"=> ":attribute minimal :min karakter",
             "password.letters"=> ":attribute harus mengandung :letters",
             "password.symbols"=> ":attribute harus mengandung :symbols",
@@ -63,6 +64,7 @@ class UsersController extends Controller
     // Mendapatkan credentials
     $credentials = $request->only('email', 'password');
 
+
     // Jika autentikasi gagal
     if (!Auth::attempt($credentials)) {
         return response()->json([
@@ -75,7 +77,9 @@ class UsersController extends Controller
     $user = Auth::user();
 
     // Generate token menggunakan Sanctum
-    $token = $user->createToken('token')->plainTextToken;
+    $token = $user->createToken('token', ['*'], now()->addMinutes(1))->plainTextToken;
+    // $token->expires_at = Carbon::now()->addMinutes(1);
+    // $token->save();
 
     return response()->json([
         'success' => true,
@@ -84,6 +88,15 @@ class UsersController extends Controller
         'user' => $user,
     ], 200);
 }
+
+    public function logout(Request $request)
+    {
+        auth()->user()->tokens->delete();
+        return [
+            'status'=> true,
+            'message' => 'Anda Berhasil Logout'
+        ];
+    }
 
     public function getUser(string $id)
     {

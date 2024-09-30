@@ -2,11 +2,13 @@
 
 namespace App\Http\Controllers;
 
+use App\Enums\enums;
 use App\Models\comments;
 use App\Models\tasks;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Validation\Rules\Enum;
 
 class CommentsController extends Controller
 {
@@ -24,7 +26,7 @@ class CommentsController extends Controller
         // $comments = comments::create($data);
         // Validasi input
         $request->validate([
-            'comment' => 'required|string|max:255',
+            'comment' => ['required','string','max:255'],
         ]);
 
         // Cek apakah task ada
@@ -60,7 +62,7 @@ class CommentsController extends Controller
     {
         $task = Comments::where('tasks_id', $tasks_id)
                                 ->get();
-        if (!$task) {
+        if (count($task)==0) {
         return response()->json([
             'status'=> 'failed',
             'message' => 'Comment tidak Ditemukan',
