@@ -5,15 +5,17 @@ use App\Http\Controllers\TasksController;
 use App\Http\Controllers\UsersController;
 use Illuminate\Support\Facades\Route;
 
-Route::prefix("users")->group(function () {
-    Route::post('/login', [UsersController::class,'login']);
-    Route::post('/register', [UsersController::class,'register']);
-    Route::post('/logout', [UsersController::class,'logout']);
-    Route::get("/{id}", [UsersController::class, 'getUser']);
-    Route::post("/create", [UsersController::class, 'createUser']);
-});
+
+Route::post('/login', [UsersController::class,'login']);
+Route::post("/register", [UsersController::class, 'register']);
+
 
 Route::middleware('auth:sanctum')->group(function () {
+    Route::prefix("users")->group(function () {
+        Route::post('/logout', [UsersController::class,'logout']);
+        Route::get("/{id}", [UsersController::class, 'getUser']);
+    });
+
     Route::prefix('tasks')->group(function () {
         Route::get('/{users_id}', [TasksController::class,'getTasks']);
         Route::post('/', [TasksController::class,'createTasks']);

@@ -12,7 +12,8 @@ use Symfony\Component\HttpFoundation\Response;
 use function Laravel\Prompts\password;
 use Illuminate\Validation\Rules\Password;
 use Illuminate\Support\Facades\Validator;
-use Laravel\Sanctum\PersonalAccessToken;
+
+
 
 class UsersController extends Controller
 {
@@ -91,9 +92,10 @@ class UsersController extends Controller
 
     public function logout(Request $request)
     {
-        auth()->user()->tokens->delete();
+        $user = $request->user();
+        $user->currentAccessToken()->delete();
         return [
-            'status'=> true,
+            'status'=> 'success',
             'message' => 'Anda Berhasil Logout'
         ];
     }
@@ -112,41 +114,6 @@ class UsersController extends Controller
                 'message'=> 'Users Ditemukan',
                 'data'=> new UsersResource(true, 'Users Ditemukan', $user)
             ]);
-        }
-    }
-
-    public function createUser(Request $request)
-    {
-        $request->validate([
-            "username"=> ["required", "lowercase"],
-            "email"=> ["required", "email"],
-            "password"=> ["required"],
-        ],[
-            "username.required"=> "Username Wajib Diisi",
-            "username.lowercase"=> ":attribute harus mengandung Huruf Kecil",
-            "email"=> ":attribute Wajib diisi",
-            "password.min"=> ":attribute minimal :min karakter",
-            "password.letters"=> ":attribute harus mengandung :letters",
-            "password.symbols"=> ":attribute harus mengandung :symbols",
-        ]);
-        $user = User::create([
-            "username"=> $request->username,
-            "email"=> $request->email,
-            "password"=> bcrypt($request->password),
-            "email_verified_at"=> Carbon::now(),
-        ]);
-
-        if ($user) {
-            return response()->json([
-                "status"=> "success",
-                'message' => 'Berhasil Membuat User',
-                'data' => $user,
-            ],Response::HTTP_OK);
-        }else{
-            return response()->json([
-                'status' => 'false',
-                "message"=> "Gagal Membuat User"
-            ], Response::HTTP_NOT_FOUND);
         }
     }
 }
