@@ -2,6 +2,8 @@
 
 
 use Illuminate\Foundation\Application;
+use Illuminate\Auth\AuthenticationException;
+use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
 
@@ -16,5 +18,11 @@ return Application::configure(basePath: dirname(__DIR__))
 
     })
     ->withExceptions(function (Exceptions $exceptions) {
-        //
+        // if ($exceptions instanceof AuthorizationException) {
+        //     return response()->json([
+        //      'status' => 'failed',
+        //      'message' => 'Anda Belum Login'
+        //     ],401);
+        // }
+        
     })->create();

@@ -84,7 +84,7 @@ class TasksController extends Controller
         $validator = Validator::make($request->all(),[
             'title'=> ['required'],
             'description'=> ['required'],
-            'status'=> ['required', 'in:PENDING,ON PROGRESS, DONE']
+            'status'=> ['required', 'in:PENDING,ON PROGRESS,DONE']
         ]);
         // $data = [
         //     'title'=> $request->input('title'),

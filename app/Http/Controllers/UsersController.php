@@ -78,7 +78,7 @@ class UsersController extends Controller
     $user = Auth::user();
 
     // Generate token menggunakan Sanctum
-    $token = $user->createToken('token', ['*'], now()->addMinutes(1))->plainTextToken;
+    $token = $user->createToken('token', ['*'], now()->addMinutes(5))->plainTextToken;
     // $token->expires_at = Carbon::now()->addMinutes(1);
     // $token->save();
 
