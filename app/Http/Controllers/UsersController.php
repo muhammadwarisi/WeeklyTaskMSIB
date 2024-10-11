@@ -92,12 +92,12 @@ class UsersController extends Controller
 
     public function logout(Request $request)
     {
-        $user = $request->user();
-        $user->currentAccessToken()->delete();
-        return [
+        // $user = $request->user();
+        // $user->currentAccessToken()->delete();
+        return response()->json([
             'status'=> 'success',
             'message' => 'Anda Berhasil Logout'
-        ];
+        ]); 
     }
 
     public function getUser(string $id)

@@ -104,7 +104,7 @@ class TasksController extends Controller
             return response()->json([
                         'status' => 'success',
                         'message' => 'Task Berhasil DiUpdate',
-                    ], 200);
+                    ], Response::HTTP_OK);
         } catch (\Exception $th) {
             return response()->json([
                 'status' => false,
