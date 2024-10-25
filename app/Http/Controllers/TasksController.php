@@ -2,12 +2,13 @@
 
 namespace App\Http\Controllers;
 
-use App\Rules\enums;
+use Carbon\Carbon;
 use App\Models\User;
+use App\Rules\enums;
 use App\Models\tasks;
 use Illuminate\Http\Request;
-use App\Http\Resources\TasksResource;
 use App\Rules\Enums as RulesEnums;
+use App\Http\Resources\TasksResource;
 use Illuminate\Validation\Rules\Enum;
 use Illuminate\Contracts\Validation\Rule;
 use Illuminate\Support\Facades\Validator;
@@ -17,113 +18,181 @@ use Symfony\Component\HttpFoundation\Response;
 
 class TasksController extends Controller
 {
-    public function getTasks(string $users_id)
+    public function getTasksByUserId(Request $request,string $users_id)
     {
-        $tasks = tasks::where("users_id", $users_id)->get();
-        // dd(count($tasks)); 
-        if(count($tasks) == 0) {
+        // Ambil parameter pencarian dari request
+        $title = $request->input('title');
+        $description = $request->input('description');
+        $status = $request->input('status');
+        $startDate = $request->input('start_date'); // Tanggal mulai
+        $endDate = $request->input('end_date'); // Tanggal akhir
+        $created_at = $request->input('created_at'); // Tanggal dibuat
+
+        // Query dasar untuk mengambil tasks berdasarkan users_id
+        $query = tasks::where("users_id", $users_id);
+
+        // Tambahkan filter jika parameter ada
+        if ($title) {
+            $query->where('title', 'LIKE', "%$title%");
+        }
+
+        if ($description) {
+            $query->where('description', 'LIKE', "%$description%");
+        }
+
+        if ($status) {
+            $query->where('status', 'LIKE', $status);
+        }
+        
+        if ($startDate && $endDate) {
+            $query->whereBetween('deadline', [$startDate, $endDate]);
+        }
+        
+        if ($created_at) {
+            $query->where('created_at', 'LIKE', "%$created_at%");
+        }
+        // Ambil hasil query
+        $tasks = $query->get();
+        // dd($created_at);
+
+        // Cek apakah ada data yang ditemukan
+        if ($tasks->isEmpty()) {
             return response()->json([
-                'status'=> 'failed',
-                'message' => 'Tidak Ada Tasks'
-            ],400); 
+                'success' => false,
+                'message' => 'Task Tidak Ditemukan',
+            ], Response::HTTP_NOT_FOUND);
         } else {
             return response()->json([
-                'status'=> 'success',
+                'success' => true,
                 'message' => 'Task Ditemukan',
-                'data'=> $tasks
-            ], 200);
+                'data' => TasksResource::collection($tasks),
+            ], Response::HTTP_OK);
         }
+    }
+
+    public function getTaskByUserIdByKeyword(Request $request, string $users_id)
+    {
+        // Query dasar untuk mengambil tasks berdasarkan users_id
+        $query = tasks::where("users_id", $users_id);
+
+        // Ambil keyword dan filter dari request
+        $keyword = $request->keyword;
+
+        // Jika keyword ada, tambahkan filter pencarian berdasarkan title, description, status
+        if ($keyword) {
+            $query->where(function ($query) use ($keyword) {
+                $query->where('title', 'LIKE', "%$keyword%")
+                    ->orWhere('description', 'LIKE', "%$keyword%")
+                    ->orWhere('status', 'LIKE', "%$keyword%")
+                    ->orWhere('created_at', "LIKE", "%$keyword%");
+            });
+        }
+
+        // Ambil hasil query
+        $tasks = $query->get();
+
+        // Cek apakah ada data yang ditemukan
+        if ($tasks->isEmpty()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Task Tidak Ditemukan',
+            ], Response::HTTP_NOT_FOUND);
+        } else {
+            return response()->json([
+                'success' => true,
+                'message' => 'Task Ditemukan',
+                'data' => TasksResource::collection($tasks),
+            ], Response::HTTP_OK);
+        }
+    }
+
+    public function getTasksById(string $task_id)
+    {
+        $tasks = tasks::where("id", $task_id)->first();
+
+        if (!$tasks) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Tidak Ada Tasks'
+            ], Response::HTTP_NOT_FOUND);
+        }
+        return response()->json([
+            'success' => true,
+            'message' => 'Task Ditemukan',
+            'data' => new TasksResource($tasks),
+        ], Response::HTTP_OK);
     }
 
     public function createTasks(Request $request)
     {
         $validator = Validator::make([
-            'title'=> $request->title,
-            'description'=> $request->description,
+            'title' => $request->title,
+            'description' => $request->description,
+            'deadline' => $request->deadline,
             'status' => $request->status
         ], [
-            'title'=> 'required',
-            'description'=> 'required',
-            'status'=> ['required', new enums()]
+            'title' => 'required',
+            'description' => 'required',
+            'deadline' => 'required',
+            'status' => ['required'],
         ]);
 
-        if($validator->fails()){
+        if ($validator->fails()) {
             return response()->json([
-                'status'=> false,
-                'message'=> $validator->errors()
+                'status' => false,
+                'message' => $validator->errors()
             ]);
         }
-        
 
         $tasks = tasks::create([
             'title' => $request->title,
             'description' => $request->description,
+            'deadline' => $request->deadline,
             'status' => $request->status,
             'users_id' => $request->users_id,
-            // 'users_id' => auth()->user()->id,
-            // 'users_id'=> User::with('tasks')
-            //                     ->where('id', $request->users_id)
-            //                     ->get(),
         ]);
-        if ($tasks){
+        if ($tasks) {
             return response()->json([
-                'status' => 'success',
-                'message'=> 'Berhasil Membuat Data',
+                'success' => true,
+                'message' => 'Berhasil Membuat Data',
                 'data' => $tasks,
-            ],200);
+            ], Response::HTTP_CREATED);
         } else {
             return response()->json([
-                'status'=>'false',
-                'message'=> 'Gagal membuat tasks'
+                'status' => 'false',
+                'message' => 'Gagal membuat task'
             ], Response::HTTP_BAD_REQUEST);
         }
-        
     }
     public function updateTasks(Request $request, string $tasks_id)
     {
-        $validator = Validator::make($request->all(),[
-            'title'=> ['required'],
-            'description'=> ['required'],
-            'status'=> ['required', 'in:PENDING,ON PROGRESS,DONE']
+        $validator = Validator::make($request->all(), [
+            'title' => ['required'],
+            'description' => ['required'],
+            'deadline' => ['required'],
+            'status' => ['required', 'in:PENDING,ON PROGRESS,DONE']
         ]);
-        // $data = [
-        //     'title'=> $request->input('title'),
-        //     'description'=> $request->input('description'),
-        //     'status'=> $request->input('status'),
-        // ];
+
         if ($validator->fails()) {
             return response()->json([
                 'success' => false,
                 'message' => $validator->errors(),
             ], 400);
         }
-       
+
         try {
             $data = $validator->validated();
-            $tasks = tasks::where('id', $tasks_id)->update($data);
+            tasks::where('id', $tasks_id)->update($data);
             return response()->json([
-                        'status' => 'success',
-                        'message' => 'Task Berhasil DiUpdate',
-                    ], Response::HTTP_OK);
+                'status' => 'success',
+                'message' => 'Task Berhasil DiUpdate',
+            ], Response::HTTP_OK);
         } catch (\Exception $th) {
             return response()->json([
                 'status' => false,
                 'message' => $th->getMessage(),
-            ],500);
+            ], 500);
         }
-        // if ($tasks) {
-        //     return response()->json([
-        //         'status' => 'success',
-        //         'message' => 'Task Berhasil DiUpdate',
-        //     ], 200);
-        // } 
-        // else {
-            // return response()->json([
-            //     'message' => 'Tasks Gagal DiUpdate',
-            //     'status' => 'failed',
-            //     'errors' => $validator->errors()
-            // ],400);
-        // }
     }
     public function deleteTasks(string $tasks_id)
     {
@@ -133,7 +202,7 @@ class TasksController extends Controller
             // Hapus task
             $tasks->delete();
             return response()->json([
-                'status'=> 'success',
+                'status' => 'success',
                 'message' => 'Task Berhasil Dihapus'
             ], 200);
         } else {

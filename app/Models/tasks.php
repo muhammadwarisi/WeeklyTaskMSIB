@@ -13,6 +13,7 @@ class tasks extends Model
     protected $fillable = [
         'title',
         'description',
+        'deadline',
         'status',
         'users_id',
     ];
@@ -20,6 +21,8 @@ class tasks extends Model
     {
         return $this->hasMany(comments::class,'tasks_id');
     }
+
+    
 
     
 

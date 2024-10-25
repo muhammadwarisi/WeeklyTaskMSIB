@@ -2,9 +2,7 @@
 
 namespace App\Models;
 
-// use Illuminate\Contracts\Auth\MustVerifyEmail;
-
-// use Laravel\Passport\HasApiTokens;
+use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Laravel\Sanctum\HasApiTokens;
 use Illuminate\Notifications\Notifiable;
 use Illuminate\Database\Eloquent\Relations\HasMany;
@@ -13,8 +11,9 @@ use Illuminate\Foundation\Auth\User as Authenticatable;
 
 class User extends Authenticatable
 {
-    use HasApiTokens,HasFactory, Notifiable;
+    use HasApiTokens,HasFactory, Notifiable, HasUuids;
 
+    public $incrementing = false;
     /**
      * The attributes that are mass assignable.
      *
@@ -23,6 +22,8 @@ class User extends Authenticatable
     protected $fillable = [
         'username',
         'email',
+        'firstname',
+        'lastname',
         'password',
     ];
 

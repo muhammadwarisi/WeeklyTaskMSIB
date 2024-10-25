@@ -8,21 +8,25 @@ use Illuminate\Support\Facades\Route;
 
 Route::post('/login', [UsersController::class,'login']);
 Route::post("/register", [UsersController::class, 'register']);
-Route::post('/logout', [UsersController::class,'logout']);
 
-Route::middleware('auth:sanctum')->group(function () {
+
+Route::middleware(['auth:sanctum', 'status.token'])->group(function () {
     Route::prefix("users")->group(function () {
-        Route::post('/logout', [UsersController::class,'logout']);
-        Route::get("/{id}", [UsersController::class, 'getUser']);
+        Route::get("/{user_id}", [UsersController::class, 'getUser']);
+        Route::get("/", [UsersController::class, 'getAllUser']);
     });
 
     Route::prefix('tasks')->group(function () {
-        Route::get('/{users_id}', [TasksController::class,'getTasks']);
+        Route::get('/user/{users_id}', [TasksController::class,'getTasksByUserId']);
+        Route::get('/{tasks_id}', [TasksController::class,'getTasksById']);
+        // Route::get('/{tasks_id}', [TasksController::class,'getTaskByUserIdByKeyword']);
         Route::post('/', [TasksController::class,'createTasks']);
-        Route::put('/{id}', [TasksController::class,'updateTasks']);
-        Route::delete('/{id}', [TasksController::class,'deleteTasks']);
+        Route::put('/{task_id}', [TasksController::class,'updateTasks']);
+        Route::delete('/{task_id}', [TasksController::class,'deleteTasks']);
         Route::post('/{tasks_id}/comment', [CommentsController::class,'createComment']);
-        Route::get('/{tasks_id}/comment', [CommentsController::class,'getComment']);
+        Route::get('/{tasks_id}/comment', [CommentsController::class,'getCommentByKeyword']);
+        Route::get('/{tasks_id}/getcomment', [CommentsController::class,'getCommentByField']);
     });
+    Route::post('/logout', [UsersController::class,'logout']);
 });
 

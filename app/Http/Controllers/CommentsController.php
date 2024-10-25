@@ -3,30 +3,21 @@
 namespace App\Http\Controllers;
 
 use App\Enums\enums;
-use App\Models\comments;
-use App\Models\tasks;
 use App\Models\User;
+use App\Models\tasks;
+use App\Models\comments;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Validation\Rules\Enum;
+use Symfony\Component\HttpFoundation\Response;
 
 class CommentsController extends Controller
 {
-    public function createComment(Request $request,string $tasks_id)
+    public function createComment(Request $request, string $tasks_id)
     {
-        
-        // $data = [
-        //     'tasks_id' => $tasks_id,
-        //     // 'users_id'=> $guest_user_id,
-        //     // 'users_id'=> $request->users_id,
-        //     // 'users_id'=> User::with('comments')->find('users_id')->get(1),
-        //     'users_id' => Auth::id(),
-        //     'comment' => $request->comment,
-        // ];
-        // $comments = comments::create($data);
-        // Validasi input
         $request->validate([
-            'comment' => ['required','string','max:255'],
+            'comment' => ['required', 'string', 'max:255'],
         ]);
 
         // Cek apakah task ada
@@ -47,32 +38,113 @@ class CommentsController extends Controller
         ]);
         if (!$comment) {
             return response()->json([
-                'status'=> 'failed',
+                'status' => 'failed',
                 'message' => 'gagal membuat komen',
-            ],400);
+            ], Response::HTTP_BAD_REQUEST);
         } else {
             return response()->json([
-                'status'=> 'success',
-                'message'=> 'berhasil membuat comment',
-                'data'=> $comment
-            ],200);
+                'status' => 'success',
+                'message' => 'berhasil membuat comment',
+                'data' => $comment
+            ], Response::HTTP_CREATED);
         }
     }
-    public function getComment(string $tasks_id)
+    public function getCommentByKeyword(Request $request, string $tasks_id)
     {
-        $task = Comments::where('tasks_id', $tasks_id)
-                                ->get();
-        if (count($task)==0) {
-        return response()->json([
-            'status'=> 'failed',
-            'message' => 'Comment tidak Ditemukan',
-        ],404);
+        // Query dasar mengambil komentar berdasarkan tasks_id
+        $query = Comments::where('tasks_id', $tasks_id);
+
+        // Ambil keyword dari request jika tersedia
+        $keyword = $request->keyword;
+
+        // Jika keyword ada, tambahkan filter pencarian
+        if ($keyword) {
+            $query->where(function ($query) use ($keyword) {
+                $query->where('users_id', 'LIKE', "%$keyword%")
+                    ->orWhere('comment', 'LIKE', "%$keyword%")
+                    ->orWhereHas('user', function ($query) use ($keyword) {
+                        $query->where('username', 'LIKE', "%$keyword%")
+                              ->orWhere('firstname', 'LIKE', "%$keyword%")
+                              ->orWhere('lastname', 'LIKE', "%$keyword%")
+                              ->orWhere('firstname', 'LIKE', "%$keyword%")
+                              ->orwhere(DB::raw("CONCAT(firstname, ' ', lastname)"), 'LIKE', "%$keyword%");
+                    });
+            });
+        }
+
+        // Ambil hasil query
+        $task = $query->get();
+
+        // Cek apakah ada data yang ditemukan
+        if ($task->isEmpty()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Comment tidak ditemukan',
+            ], Response::HTTP_NOT_FOUND);
         } else {
             return response()->json([
-                'status'=> 'success',
-                'message'=> 'comment ditemukan',
-                'data'=> $task
-            ],200);
+                'success' => true,
+                'message' => 'Comment ditemukan',
+                'data' => $task
+            ], Response::HTTP_OK);
+        }
+    }
+
+    public function getCommentByField(Request $request, string $tasks_id)
+    {
+        $task = tasks::find($tasks_id)->first();
+        if ($tasks_id != $task->id) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Task Tidak Ditemukan',
+            ], Response::HTTP_NOT_FOUND);
+        }
+        // Ambil parameter pencarian dari request
+        $userId = $request->input('user_id');
+        $username = $request->input('username');
+        $comment = $request->input('comment');
+        $name = $request->input('name');
+
+        // Query dasar untuk mengambil comments berdasarkan tasks_id
+        $query = Comments::where("tasks_id", $tasks_id);
+
+        // Tambahkan filter jika parameter ada
+        if ($userId) {
+            $query->where('users_id', $userId);
+        }
+
+        if ($username) {
+            $query->whereHas('user', function ($query) use ($username) {
+                $query->where('username', 'LIKE', "%$username%");
+            });
+        }
+
+        if ($comment) {
+            $query->where('comment', 'LIKE', "%$comment%");
+        }
+
+        if ($name) {
+            // Gabungkan firstname dan lastname sebagai alias 'nama'
+            $query->whereHas('user', function ($query) use ($name) {
+                $query->where(DB::raw("CONCAT(firstname, ' ', lastname)"), 'LIKE', "%$name%");
+            });
+        }
+
+        // Ambil hasil query
+        $comments = $query->get();
+
+        // Cek apakah ada data yang ditemukan
+        if ($comments->isEmpty()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Comment Tidak Ditemukan',
+            ], Response::HTTP_NOT_FOUND);
+        } else {
+            return response()->json([
+                'success' => true,
+                'message' => 'Comment Ditemukan',
+                'data' => $comments,
+            ], Response::HTTP_OK);
         }
     }
 }

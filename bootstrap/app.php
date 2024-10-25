@@ -15,7 +15,9 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware) {
-
+        $middleware->alias([
+            'status.token' => \App\Http\Middleware\CheckRevokedToken::class,
+        ]);
     })
     ->withExceptions(function (Exceptions $exceptions) {
         // if ($exceptions instanceof AuthorizationException) {

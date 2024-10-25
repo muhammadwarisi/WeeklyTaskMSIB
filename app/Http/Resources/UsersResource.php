@@ -7,27 +7,7 @@ use Illuminate\Http\Resources\Json\JsonResource;
 
 class UsersResource extends JsonResource
 {
-    //define properti
-    public $status;
-    public $message;
-    public $resource;
-    
-    /**
-     * __construct
-     *
-     * @param  mixed $status
-     * @param  mixed $message
-     * @param  mixed $resource
-     * @return void
-     */
-    public function __construct($status, $message, $resource)
-    {
-        parent::__construct($resource);
-        $this->status  = $status;
-        $this->message = $message;
-    }
-
-    /**
+     /**
      * Transform the resource into an array.
      *
      * @return array<string, mixed>
@@ -35,10 +15,13 @@ class UsersResource extends JsonResource
     public function toArray(Request $request): array
     {
         return [
-            "username"=> $this->username,
-            "email"=> $this->email,
-            'created_at'=> $this->created_at,
-            'updated_at'=> $this->updated_at
+                "username"=> $this->username,
+                "firstname" => $this->firstname,
+                "lastname" => $this->lastname,
+                "name"=> $this->firstname . ' ' . $this->lastname,
+                "email"=> $this->email,
+                'created_at'=> $this->created_at,
+                'updated_at'=> $this->updated_at
         ];
     }
 }
